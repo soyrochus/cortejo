@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "cortejo"
+version = "0.1.0"
+description = "Create Cypress tests based on a human language definition (using AI)"
+authors = ["Iwan van der Kleijn <iwanvanderkleijn@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pandas = "^2.2.1"
+openpyxl = "^3.1.2"
+langchain = "^0.1.10"
+langchain-openai = "^0.0.8"
+python-dotenv = "^1.0.1"
+
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.8.0"
+pandas-stubs = "^2.2.0.240218"
+flake8 = "^7.0.0"
+black = "^24.2.0"
+pytest = "^8.0.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

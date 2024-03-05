@@ -76,14 +76,15 @@ Expected Result :- {data.expected_result}
         
     return "\n".join(templates)
     
-def generate_cypress_test(use_case: str, test_data: list[TestData]) -> str:
+def generate_cypress_test(use_case: str, all_test_data:  Dict[str, List[TestData]]) -> str:
+    test_data = all_test_data[use_case]
     prompt = generate_test_prompt(use_case, test_data)
     response = llm.invoke(prompt)
     return response.content # type: ignore
 
 
 if __name__ == '__main__':
-    #test_data = read_tests('data/test-data.xlsx')
-    test_data = read_tests('data/devonfw.xlsx')
+    test_data = read_tests('data/test-data.xlsx')
+    #test_data = read_tests('data/devonfw.xlsx')
     use_cases = split_tests_in_use_cases(test_data) 
-    print(generate_cypress_test('Login', use_cases['Home']))
+    print(generate_cypress_test('Login', use_cases))

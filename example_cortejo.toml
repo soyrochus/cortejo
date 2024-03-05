@@ -1,0 +1,3 @@
+
+[cypress]
+tests-path="cypress/booh"

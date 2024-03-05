@@ -6,33 +6,14 @@ Cortejo - Create Cypress tests based on a human language definition (using AI)
 @license: MIT
 """
 
-from dataclasses import dataclass
+import argparse
 import os
+from pathlib import Path
 from typing import Dict, List
-from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
 import pandas as pd
-
-
-try:
-    # set the key from file "openai_key.txt" in the same directory as this file or set
-    # the environment variable OPENAI_API_KEY
-    load_dotenv("openai_api_key.env")
-    llm = ChatOpenAI(api_key=os.environ["OPENAI_API_KEY"])  # type: ignore
-except Exception as e:
-    print(e)
-    exit(1)
-
-
-@dataclass
-class TestData:
-    #def __init__(self, use_case, description, type, input_elements, action, expected_result):
-    use_case: str
-    description: str
-    type: str
-    input_elements: str
-    action: str
-    expected_result: str
+import tomllib
+from cortejo.ai import generate_cypress_test
+from cortejo.data import TestData
 
 
 def read_tests(filename):
@@ -59,32 +40,64 @@ def split_tests_in_use_cases(test_data) -> Dict[str, List[TestData]]:
         use_cases[test.use_case].append(test)
     return use_cases
 
+def get_run_params():
+    # Initialize the parser
+    parser = argparse.ArgumentParser(description='Process runtime parameters.')
 
-def generate_test_prompt(use_case: str, test_data: list[TestData]) -> str:
-    templates = [f"""For the Use Case "{use_case}", create a series of Cypress tests. Do not include
-the cy.visit call to each tests. But rather, include it in the beforeEach block. 
-For the tests use the following data representing each test case:
-    """]
-    
-    for data in test_data:
-        templates.append(f"""Description :- {data.description}	
-Type :- {data.type}	
-Input Elements :- {data.input_elements}
-Action :- {data.action}	
-Expected Result :- {data.expected_result}
-""")
+    # Adding arguments
+    parser.add_argument('-c', '--config', type=str, help='Path to the config TOML file', default=None)
+    parser.add_argument('test_def_path', type=str, help='Path to the test definition Excel file')
+    parser.add_argument('tests_output_path', type=str, nargs='?', default=',', help='Path for the tests output')
+
+    # Parse the arguments
+    args = parser.parse_args()
+
+    # Convert string paths to Path instances
+    config_path = Path(args.config) if args.config else None
+    test_def_path = Path(args.test_def_path)
+    tests_output_path = Path(args.tests_output_path)
+
+    return config_path, test_def_path, tests_output_path
+
+def get_config(config_path: Path | None = None) -> Dict[str, Dict[str, str]]:
+    if config_path is None:
+        # Check in the current directory
+        current_dir_path = Path('cortejo.toml')
+        home_dir_path = Path.home() / '.cortejo.toml'
         
-    return "\n".join(templates)
+        if current_dir_path.exists():
+            config_path = current_dir_path
+        elif home_dir_path.exists():
+            config_path = home_dir_path
+        else:
+             return {"cypress": {"tests-path": "cypress/integration"}}
+    else:
+        config_path = Path(config_path)
     
-def generate_cypress_test(use_case: str, all_test_data:  Dict[str, List[TestData]]) -> str:
-    test_data = all_test_data[use_case]
-    prompt = generate_test_prompt(use_case, test_data)
-    response = llm.invoke(prompt)
-    return response.content # type: ignore
+    # Check if the specified config path exists
+    if not config_path.exists():
+       raise Exception(f"Config file {config_path} does not exist")
 
+    # Read the TOML file and return the content
+    with open(config_path, 'rb') as file:
+        try:
+            data = tomllib.load(file)
+        except Exception as e:
+            raise Exception(f"Error reading config file {config_path}: {e}")
+    
+    return data
 
 if __name__ == '__main__':
-    test_data = read_tests('data/test-data.xlsx')
+    try:
+        config_path, test_def_path, tests_output_path = get_run_params()
+        config_data = get_config(config_path)
+        test_data = read_tests(test_def_path)
+        use_cases = split_tests_in_use_cases(test_data) 
+        print(generate_cypress_test('Login', use_cases))
+    except Exception as e:
+        print(e)
+        exit(1)
+    #test_data = read_tests('data/test-data.xlsx')
     #test_data = read_tests('data/devonfw.xlsx')
-    use_cases = split_tests_in_use_cases(test_data) 
-    print(generate_cypress_test('Login', use_cases))
+    #use_cases = split_tests_in_use_cases(test_data) 
+    #print(generate_cypress_test('Login', use_cases))

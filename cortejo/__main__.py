@@ -83,6 +83,7 @@ def generate_cypress_test(use_case: str, test_data: list[TestData]) -> str:
 
 
 if __name__ == '__main__':
-    test_data = read_tests('data/test-data.xlsx')
+    #test_data = read_tests('data/test-data.xlsx')
+    test_data = read_tests('data/devonfw.xlsx')
     use_cases = split_tests_in_use_cases(test_data) 
-    print(generate_cypress_test('Login', use_cases['Login']))
+    print(generate_cypress_test('Login', use_cases['Home']))

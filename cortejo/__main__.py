@@ -12,11 +12,11 @@ from pathlib import Path
 import tomllib
 from typing import Dict
 from cortejo.ai import generate_cypress_test
-from cortejo.data import BoundedContexts, TestData, get_bounded_contexts, read_tests
+from cortejo.data import BoundedContexts, ConfigData, TestData, get_bounded_contexts, read_tests
 
 def get_run_params():
     # Initialize the parser
-    parser = argparse.ArgumentParser(description='Process runtime parameters.')
+    parser = argparse.ArgumentParser(prog='cortejo', description='Create Cypress tests based on a human language definition (using AI)')
 
     # Adding arguments
     parser.add_argument('-c', '--config', type=str, help='Path to the config TOML file', default=None)
@@ -35,18 +35,15 @@ def get_run_params():
 
     return config_path, test_def_path, project_path
 
-def get_config(config_path: Path | None = None) -> Dict[str, Dict[str, str]]:
+def get_config(config_path: Path | None = None) -> ConfigData:
     if config_path is None:
         # Check in the current directory
         current_dir_path = Path('cortejo.toml')
-        #home_dir_path = Path.home() / '.cortejo.toml'
         
         if current_dir_path.exists():
             config_path = current_dir_path
-        #elif home_dir_path.exists():
-        #    config_path = home_dir_path
         else:
-             return {"cypress": {"tests-path": "cypress/e2e"}}
+            raise Exception(f"Config file {current_dir_path} does not exist")
     else:
         config_path = Path(config_path)
     
@@ -63,6 +60,7 @@ def get_config(config_path: Path | None = None) -> Dict[str, Dict[str, str]]:
     
     return data
 
+
 def write_tests(tests_output_path: Path, bounded_contexts:BoundedContexts):
     for context in bounded_contexts:
         dir_path = os.path.join(tests_output_path, context)
@@ -70,22 +68,24 @@ def write_tests(tests_output_path: Path, bounded_contexts:BoundedContexts):
             os.makedirs(dir_path)
         
         for use_case in bounded_contexts[context]:
+           
             test_file_path = os.path.join(dir_path, f"{use_case}.spec.js")
             with open(test_file_path, 'w') as test_file:
-                tests = generate_cypress_test(context, use_case, bounded_contexts)
-                test_file.write(tests)
+                first_test = bounded_contexts[context][use_case][0]
+                file_content = generate_cypress_test(first_test.url, context, use_case, bounded_contexts[context][use_case])
+                test_file.write(file_content)
 
 if __name__ == '__main__':
     try:
         config_path, test_def_path, project_path = get_run_params()
         config_data = get_config(config_path)
-        test_data = read_tests(test_def_path)
+        test_data = read_tests(test_def_path, config_data)
         bounded_contexts = get_bounded_contexts(test_data) 
         output_path = Path.joinpath(project_path.resolve(), Path(config_data['cypress']['tests-path']))
         if not output_path.exists():
             raise Exception(f"Tests path {output_path} does not exist")
         write_tests(output_path, bounded_contexts)
-        #print(generate_cypress_test('Auth', 'Login', bounded_contexts))
+       
         print(f"Tests written to {output_path}")
         
     except Exception as e:

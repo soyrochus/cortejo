@@ -8,6 +8,25 @@ Creation of Cypress tests based on a human language definition (using AI)
 el cortejo de palabras,<br>
 pruebas danzarán''
 
+## Usage 
+
+```bash
+❯ cortejo -h
+usage: cortejo [-h] [-c CONFIG] test_def_path [project_path]
+
+Create Cypress tests based on a human language definition (using AI)
+
+positional arguments:
+  test_def_path         Path to the test definition Excel file
+  project_path          Project Path (default: current directory)
+
+options:
+  -h, --help            show this help message and exit
+  -c CONFIG, --config CONFIG
+                        Path to the config TOML file
+```
+For the specification of the tests, see the [example Toml file](test_cortejo.toml).
+
 ## Installation
 
 Clone the repository. Use the dependency and package manager [Poetry](https://python-poetry.org/) to install all the dependencies of AItheneum.

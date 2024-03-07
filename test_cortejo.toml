@@ -1,3 +1,7 @@
 
 [cypress]
 tests-path="cypress/e2e"
+default-url="http://localhost:3000"
+
+[urls]
+Auth="http://localhost:3000/login"

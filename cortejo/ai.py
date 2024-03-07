@@ -25,13 +25,16 @@ except Exception as e:
 
 
 
-def generate_test_prompt(use_case: str, test_data: list[TestData]) -> str:
+def generate_test_prompt(url: str, use_case: str, test_data: list[TestData]) -> str:
     templates = [f"""For the Use Case "{use_case}", create a series of Cypress tests. Do not include
-the cy.visit call to each tests. But rather, include it in the beforeEach block. 
+the cy.visit call to each tests. But rather, include it in the beforeEach block with the url: {{url}}. 
 For the tests use the following data representing each test case:
     """]
     
     for data in test_data:
+        if data.skip_generation:
+            continue
+        
         templates.append(f"""Description :- {data.description}	
 Type :- {data.type}	
 Input Elements :- {data.input_elements}
@@ -55,8 +58,8 @@ def extract_code_block(markdown_text):
        raise ValueError("No code block found in the text returned from the AI model")
 
 
-def generate_cypress_test(bounded_context: str, use_case: str, all_test_data: BoundedContexts) -> str:
-    test_data = all_test_data[bounded_context][use_case]
-    prompt = generate_test_prompt(use_case, test_data)
+def generate_cypress_test(url: str, bounded_context: str, use_case: str, test_data: List[TestData]) -> str:
+
+    prompt = generate_test_prompt(url, use_case, test_data)
     response = llm.invoke(prompt)
     return extract_code_block(response.content) # type: ignore

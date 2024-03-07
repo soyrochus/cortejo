@@ -9,7 +9,7 @@ Cortejo - Create Cypress tests based on a human language definition (using AI)
 from typing import Dict, List
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI 
-from cortejo.data import TestData
+from cortejo.data import BoundedContexts, TestData
 import os
 import re
 
@@ -55,8 +55,8 @@ def extract_code_block(markdown_text):
        raise ValueError("No code block found in the text returned from the AI model")
 
 
-def generate_cypress_test(use_case: str, all_test_data:  Dict[str, List[TestData]]) -> str:
-    test_data = all_test_data[use_case]
+def generate_cypress_test(bounded_context: str, use_case: str, all_test_data: BoundedContexts) -> str:
+    test_data = all_test_data[bounded_context][use_case]
     prompt = generate_test_prompt(use_case, test_data)
     response = llm.invoke(prompt)
     return extract_code_block(response.content) # type: ignore

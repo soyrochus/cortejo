@@ -9,36 +9,12 @@ Cortejo - Create Cypress tests based on a human language definition (using AI)
 import argparse
 import os
 from pathlib import Path
-from typing import Dict, List
-import pandas as pd
 import tomllib
+from typing import Dict
 from cortejo.ai import generate_cypress_test
-from cortejo.data import TestData
+from cortejo.data import TestData, get_bounded_contexts, read_tests
 
 
-def read_tests(filename):
-    # Read the first sheet of the Excel file
-    df = pd.read_excel(filename, sheet_name=0)
-
-    # Select only the required columns
-    columns = ['Use Case', 'Description', 'Type', 'Input Elements', 'Action', 'Expected Result']
-    df = df[columns]
-
-    # Convert the DataFrame rows to TestData objects
-    test_data_list = [TestData(row['Use Case'], row['Description'], row['Type'], row['Input Elements'], row['Action'], 
-                               row['Expected Result']) for index, row in df.iterrows()]
-
-    return test_data_list
-
-
-def split_tests_in_use_cases(test_data) -> Dict[str, List[TestData]]:
-
-    use_cases: Dict[str, List[TestData]] = {}
-    for test in test_data:
-        if test.use_case not in use_cases: 
-            use_cases[test.use_case] = []
-        use_cases[test.use_case].append(test)
-    return use_cases
 
 def get_run_params():
     # Initialize the parser
@@ -63,12 +39,12 @@ def get_config(config_path: Path | None = None) -> Dict[str, Dict[str, str]]:
     if config_path is None:
         # Check in the current directory
         current_dir_path = Path('cortejo.toml')
-        home_dir_path = Path.home() / '.cortejo.toml'
+        #home_dir_path = Path.home() / '.cortejo.toml'
         
         if current_dir_path.exists():
             config_path = current_dir_path
-        elif home_dir_path.exists():
-            config_path = home_dir_path
+        #elif home_dir_path.exists():
+        #    config_path = home_dir_path
         else:
              return {"cypress": {"tests-path": "cypress/integration"}}
     else:
@@ -87,17 +63,21 @@ def get_config(config_path: Path | None = None) -> Dict[str, Dict[str, str]]:
     
     return data
 
+def write_tests(tests_output_path: Path, tests: str):
+    # Write the tests to the specified file
+    with open(tests_output_path, 'w') as file:
+        file.write(tests)
+
 if __name__ == '__main__':
     try:
         config_path, test_def_path, tests_output_path = get_run_params()
         config_data = get_config(config_path)
         test_data = read_tests(test_def_path)
-        use_cases = split_tests_in_use_cases(test_data) 
-        print(generate_cypress_test('Login', use_cases))
+        bounded_contexts = get_bounded_contexts(test_data) 
+        
+        print(generate_cypress_test('Auth', 'Login', bounded_contexts))
+        #print(f"Tests written to {tests_output_path}")
+        
     except Exception as e:
         print(e)
         exit(1)
-    #test_data = read_tests('data/test-data.xlsx')
-    #test_data = read_tests('data/devonfw.xlsx')
-    #use_cases = split_tests_in_use_cases(test_data) 
-    #print(generate_cypress_test('Login', use_cases))

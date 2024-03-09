@@ -1,0 +1,15 @@
+For the Bounded Context/Use Case "{{bounded_context}}/{{use_case}}", create a series of Cypress tests. Do not include
+the cy.visit call to each tests. But rather, include it in the 'beforeEach' block 
+with the url: http://localhost:3000/login. 
+
+For the tests use the following data representing each test case:
+
+{% for item in list %}
+{	
+    "description": "{{ item.description }}",
+    "type": "{{ item.type }}",
+    "input_elements": "{{ item.input_elements }}",
+    "action": "{{ item.action }}",
+    "expected_result": "{{ item.expected_result }}"
+},
+{% endfor %}

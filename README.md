@@ -1,6 +1,6 @@
 # Cortejo
 
-Creation of Cypress tests based on a human language definition (using AI)
+Creation of tests based on a human language definition (using AI)
 
 ## Why 'cortejo'? 
 
@@ -14,7 +14,7 @@ pruebas danzarán''
 ❯ cortejo -h
 usage: cortejo [-h] [-c CONFIG] test_def_path [project_path]
 
-Create Cypress tests based on a human language definition (using AI)
+Create tests based on a human language definition (using AI)
 
 positional arguments:
   test_def_path         Path to the test definition Excel file
@@ -25,7 +25,27 @@ options:
   -c CONFIG, --config CONFIG
                         Path to the config TOML file
 ```
+
+The test definition Excel file contains the human readable test definitions. See the [example file](data/test-data.xlsx). Use cases contain a number of test cases. Use cases are grouped by Bounded context.
+
+Generated tests are generated in a file per use case. The files are stored in a directory per corresponding Bounded context. 
+
+The data from this file is used to expand templates which are used to be send as prompts to the OpenAI LLM. 
+Each bounded context/use case collection can have a template associated with it by naming it '{bounded_context}-{use_case}.j2', for example: "auth_login.j2" (see the example excel file).
+
+There must be a template with name '\__default\__.j2' to serve as default/fallback case.
+
 For the specification of the tests, see the [example Toml file](test_cortejo.toml).
+The [tests] section contains two mandatory items:
+
+```bash
+#mandatory configuration
+[tests]
+tests-path="cypress/e2e"  #path generate the tests
+templates-path = "cypress/templates" #path to the Jinja2 templates
+```
+
+The templates-path directory must point to a directry containing [Jinja2](https://jinja.palletsprojects.com/) templates. See the 
 
 ## Installation
 

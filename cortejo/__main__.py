@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Cortejo - Create Cypress tests based on a human language definition (using AI)
+Cortejo - Create tests based on a human language definition (using AI)
 @copyright: Copyright © 2024 Iwan van der Kleijn
 @license: MIT
 """
@@ -11,12 +11,13 @@ import os
 from pathlib import Path
 import tomllib
 from typing import Dict
-from cortejo.ai import generate_cypress_test
+from cortejo.ai import generate_test
 from cortejo.data import BoundedContexts, ConfigData, TestData, get_bounded_contexts, read_tests
+from cortejo.templates import init_template_env
 
 def get_run_params():
     # Initialize the parser
-    parser = argparse.ArgumentParser(prog='cortejo', description='Create Cypress tests based on a human language definition (using AI)')
+    parser = argparse.ArgumentParser(prog='cortejo', description='Create tests based on a human language definition (using AI)')
 
     # Adding arguments
     parser.add_argument('-c', '--config', type=str, help='Path to the config TOML file', default=None)
@@ -72,18 +73,20 @@ def write_tests(tests_output_path: Path, bounded_contexts:BoundedContexts):
             test_file_path = os.path.join(dir_path, f"{use_case}.spec.js")
             with open(test_file_path, 'w') as test_file:
                 first_test = bounded_contexts[context][use_case][0]
-                file_content = generate_cypress_test(first_test.url, context, use_case, bounded_contexts[context][use_case])
+                file_content = generate_test(context, use_case, bounded_contexts[context][use_case])
                 test_file.write(file_content)
 
 if __name__ == '__main__':
     try:
         config_path, test_def_path, project_path = get_run_params()
         config_data = get_config(config_path)
-        test_data = read_tests(test_def_path, config_data)
-        bounded_contexts = get_bounded_contexts(test_data) 
-        output_path = Path.joinpath(project_path.resolve(), Path(config_data['cypress']['tests-path']))
+        init_template_env(config_data)
+        output_path = Path.joinpath(project_path.resolve(), Path(config_data['tests']['tests-path']))
         if not output_path.exists():
             raise Exception(f"Tests path {output_path} does not exist")
+        
+        test_data = read_tests(test_def_path, config_data)
+        bounded_contexts = get_bounded_contexts(test_data) 
         write_tests(output_path, bounded_contexts)
        
         print(f"Tests written to {output_path}")

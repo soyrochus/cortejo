@@ -1,7 +1,6 @@
 
-[cypress]
-tests-path="cypress/e2e"
-default-url="http://localhost:3000"
+#mandatory configuration
+[tests]
+tests-path="cypress/e2e"  #path generate the tests
+templates-path = "cypress/templates" #path to the Jinja2 templates
 
-[urls]
-Auth="http://localhost:3000/login"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Cortejo - Create Cypress tests based on a human language definition (using AI)
+Cortejo - Create tests based on a human language definition (using AI)
 @copyright: Copyright © 2024 Iwan van der Kleijn
 @license: MIT
 """
@@ -12,7 +12,6 @@ import pandas as pd
 @dataclass
 class TestData:
     bounded_context: str
-    url: str
     use_case: str
     description: str
     type: str
@@ -34,20 +33,9 @@ def read_tests(filename:str, config_data: ConfigData) -> List[TestData]:
     df = df[columns]
 
     # Convert the DataFrame rows to TestData objects
-    test_data_list = [TestData(row['Bounded Context'], "", row['Use Case'], row['Description'], row['Type'], 'yes' ==  row['Skip Generation'],
+    test_data_list = [TestData(row['Bounded Context'], row['Use Case'], row['Description'], row['Type'], 'yes' ==  row['Skip Generation'],
                                row['Input Elements'], row['Action'], row['Expected Result']) for index, row in df.iterrows()] 
-    
-    default_url = config_data['cypress'].get('default-url', None)
-    for test in test_data_list:
-        url = config_data['urls'].get(test.bounded_context, None)
-        if url is None:
-            if default_url is None:
-                raise Exception(f"No URL found for bounded context {test.bounded_context}")
-            else:
-                test.url = default_url
-        else:
-            test.url = url
-            
+
     return test_data_list
 
 

@@ -23,7 +23,7 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   -c CONFIG, --config CONFIG
-                        Path to the config TOML file
+                        Path to the config TOML file (take "{current_dir}/cortejo.toml" if not set)
 ```
 
 The test definition Excel file contains the human readable test definitions. See the [example file](data/test-data.xlsx). Use cases contain a number of test cases. Use cases are grouped by Bounded context.
@@ -45,11 +45,15 @@ tests-path="cypress/e2e"  #path generate the tests
 templates-path = "cypress/templates" #path to the Jinja2 templates
 ```
 
-The templates-path directory must point to a directry containing [Jinja2](https://jinja.palletsprojects.com/) templates. See the 
+The templates-path directory must point to a directory containing [Jinja2](https://jinja.palletsprojects.com/) templates. The templates is passed the following parameters:
+
+- bounded_context: First column of the Excel data 
+- use_case: Second column of the Excel data
+- list: list of columns from the Excel with the bounded_context and use_case as given, with the rows marked with "skip generation" set to "yes" filtered out.
 
 ## Installation
 
-Clone the repository. Use the dependency and package manager [Poetry](https://python-poetry.org/) to install all the dependencies of AItheneum.
+Clone the repository. Use the dependency and package manager [Poetry](https://python-poetry.org/) to install all the dependencies of Cortejo.
 
 ```bash
 poetry install
@@ -64,7 +68,7 @@ OPENAI_API_KEY=sk-A_seCR_et_key_GENERATED_foryou_by_OPENAI
 ```
 The key is loaded into the execution context of the application when run from the command line or run in the debugger.
 
-Alternatively, if the file is not present, then 'AItheneum' will look for the environment variable "OPENAI_API_KEY".
+Alternatively, if the file is not present, then 'Cortejo' will look for the environment variable "OPENAI_API_KEY".
 
 
 ## Development
